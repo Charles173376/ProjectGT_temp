@@ -21,7 +21,9 @@ limitations under the License
 """
 
 import rest
+import setHue
 
+lights_url = setHue.set_Hue("192.168.0.1", "???")
 
 class HueBridge:
     """
