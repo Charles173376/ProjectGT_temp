@@ -12,20 +12,6 @@ proper_min = 150
 proper_max = 210
 
 
-def startup (bot, update):
-    bot.sendMessage(chat_id=update.message.chat_id,
-                    text="Welcome to the project GT.")
-    bot.sendMessage(chat_id=update.message.chat_id,
-                    text="Now I will initiate an automatic check on Brightness: ")
-    auto(bot, update)
-    voice_file = gTTS(text='Welcome to the Project GT', lang='en')
-    voice_file.save('Welcome' + ".mp3")
-    bot.sendVoice(chat_id=update.message.chat_id,
-                 voice=open('Welcome' + ".mp3", "rb"))
-    os.remove("./" + 'Welcome' + ".mp3")
-    return 0
-
-
 def voice_generate(bot, update, sentence):
     voice_file = gTTS(text=sentence, lang='en')
     voice_file.save(sentence + ".mp3")
@@ -33,26 +19,36 @@ def voice_generate(bot, update, sentence):
     os.remove("./" + sentence + ".mp3")
 
 
+def startup (bot, update):
+    voice_generate(bot,update,"Welcome to the project GT.")
+    voice_generate(bot,update,"Now I will initiate an automatic check on Brightness: ")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Welcome to the project GT.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Now I will initiate an automatic check on Brightness: ")
+    auto(bot, update)
+    return 0
+
 def check_lum(bot, update, check_count):
     current_lun = get_lum()
     if current_lun < 0:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + "Failed reading luminiscence.")
-        voice_generate("Check #" + str(check_count) + "Failed reading luminiscence.")
+        voice_generate(bot,update,"Check #" + str(check_count) + "Failed reading luminiscence.")
     elif current_lun > proper_max:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too high, turning down.")
-        voice_generate("Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too high, turning down.")
+        voice_generate(bot,update,"Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too high, turning down.")
         #turn_down()
     elif current_lun < proper_min:
         bot.sendMessage(chat_id=update.message.chat_id,
                     text="Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too low, turning up.")
         #turn_up()
-        voice_generate("Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too low, turning up.")
+        voice_generate(bot,update,"Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too low, turning up.")
     else:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence in proper range.")
-        voice_generate("Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence in proper range.")
+        voice_generate(bot,update,"Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence in proper range.")
 
 
 def get_lum():
