@@ -47,7 +47,7 @@ def check_lum(bot, update, check_count):
 
 
 def get_lum():
-    return zwave.lumVal
+    return zwave.getlumVal('192.168.0.107')
 
 
 def turn_up():
