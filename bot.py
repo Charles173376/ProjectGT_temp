@@ -1,10 +1,11 @@
 from telegram.ext import Updater, CommandHandler
 from gtts import gTTS
-import os
+from os import remove
+from sys import argv
+
 import time
 import zwave
 from setVal import set_val
-
 
 updater = Updater(token='407521774:AAEkpDDxsPvJCMteOiQxWE91Z6JiJfH2xXs')
 dispatcher = updater.dispatcher
@@ -16,12 +17,12 @@ def voice_generate(bot, update, sentence):
     voice_file = gTTS(text=sentence, lang='en')
     voice_file.save(sentence + ".mp3")
     bot.sendVoice(chat_id=update.message.chat_id, voice=open(sentence + ".mp3", "rb"))
-    os.remove("./" + sentence + ".mp3")
+    remove("./" + sentence + ".mp3")
 
 
-def startup (bot, update):
-    voice_generate(bot,update,"Welcome to the project GT.")
-    voice_generate(bot,update,"Now I will initiate an automatic check on Brightness: ")
+def startup(bot, update):
+    voice_generate(bot, update, "Welcome to the project GT.")
+    voice_generate(bot, update, "Now I will initiate an automatic check on Brightness: ")
     bot.sendMessage(chat_id=update.message.chat_id,
                     text="Welcome to the project GT.")
     bot.sendMessage(chat_id=update.message.chat_id,
@@ -29,62 +30,69 @@ def startup (bot, update):
     auto(bot, update)
     return 0
 
+
 def check_lum(bot, update, check_count):
     current_lun = get_lum()
     if current_lun < 0:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + "Failed reading luminiscence.")
-        voice_generate(bot,update,"Check #" + str(check_count) + "Failed reading luminiscence.")
+        voice_generate(bot, update, "Check #" + str(check_count) + "Failed reading luminiscence.")
     elif current_lun > proper_max:
         bot.sendMessage(chat_id=update.message.chat_id,
-                        text="Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too high, turning down.")
-        voice_generate(bot,update,"Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too high, turning down.")
-        #turn_down()
+                        text="Check #" + str(check_count) + " [ " + str(
+                            current_lun) + " ] " + ": Luminiscence too high, turning down.")
+        voice_generate(bot, update, "Check #" + str(check_count) + " [ " + str(
+            current_lun) + " ] " + ": Luminiscence too high, turning down.")
+        turn_down()
     elif current_lun < proper_min:
         bot.sendMessage(chat_id=update.message.chat_id,
-                    text="Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too low, turning up.")
-        #turn_up()
-        voice_generate(bot,update,"Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence too low, turning up.")
+                        text="Check #" + str(check_count) + " [ " + str(
+                            current_lun) + " ] " + ": Luminiscence too low, turning up.")
+        voice_generate(bot, update, "Check #" + str(check_count) + " [ " + str(
+            current_lun) + " ] " + ": Luminiscence too low, turning up.")
+        turn_up()
     else:
         bot.sendMessage(chat_id=update.message.chat_id,
-                        text="Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence in proper range.")
-        voice_generate(bot,update,"Check #" + str(check_count) + " [ " + str(current_lun) + " ] " + ": Luminiscence in proper range.")
+                        text="Check #" + str(check_count) + " [ " + str(
+                            current_lun) + " ] " + ": Luminiscence in proper range.")
+        voice_generate(bot, update, "Check #" + str(check_count) + " [ " + str(
+            current_lun) + " ] " + ": Luminiscence in proper range.")
 
 
 def get_lum():
-    return zwave.getlumVal('192.168.0.107')
+    return zwave.getlumVal(str(argv[1]))
 
 
 def turn_up():
     # Keep turning up until it's proper.
     bri_to_set = 0
-    while get_lum() < proper_min:
+    while get_lum() < proper_min & bri_to_set <= 100:
         # function for Hue comes here.
-        bri_to_set += 30
+        bri_to_set += 20
         set_val(bri_to_set)
-        time.sleep(5)
+        time.sleep(3)
 
 
 def turn_down():
     # Keep turning down until it's proper.
-    bri_to_set = 0
-    while get_lum() < proper_min:
+    bri_to_set = 100
+    while get_lum() > proper_max & bri_to_set >= 0:
         # function for Hue comes here.
-        bri_to_set -= 30
+        bri_to_set -= 20
         set_val(bri_to_set)
-        time.sleep(5)
+        time.sleep(3)
 
 
-def auto (bot, update):
+def auto(bot, update):
     check_count = 0
-    while 1>0:
+    while 1 > 0:
         check_lum(bot, update, check_count)
         check_count = check_count + 1
         time.sleep(10)
 
 
 def user_initiate(bot, update):
-    check_lum(bot,update,0)
+    check_lum(bot, update, 0)
 
 
 def main():

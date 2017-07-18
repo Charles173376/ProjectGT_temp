@@ -6,13 +6,13 @@ Updated on April 20, 2016
 @author: Luigi De Russis
 
 Copyright (c) 2014-2016 Dario Bonino and Luigi De Russis
- 
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
- 
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,26 +21,25 @@ limitations under the License
 """
 
 import rest
-import setHue
 
-lights_url = setHue.set_Hue("192.168.0.1", "???")
 
 class HueBridge:
     """
     A class representing a Philips Hue bridge
     """
+
     def __init__(self, url):
-        
+
         # remove trailing slashes
         if url[-1] == '/':
             url = url[:-1]
-        
+
         # store the base API URL
         self.url = url
-        
+
         # build the lights URL
-        self.lights_url = self.url+"/lights"
-        
+        self.lights_url = self.url + "/lights"
+
     def get_all_lights(self):
         """
         Provide a dictionary of all available lamps and capabilities
@@ -54,7 +53,7 @@ class HueBridge:
         # get all lights
         all_lights = self.get_all_lights()
         for light in all_lights:
-            url_to_call = self.lights_url+'/'+light+'/state'
+            url_to_call = self.lights_url + '/' + light + '/state'
             # prepare the "turn off" request
             body = '{ "on": false }'
             rest.send('PUT', url_to_call, body, {'Content-Type': 'application/json'})
@@ -83,8 +82,14 @@ class HueBridge:
         :param hue: the hue value to set
         """
         # compose the specific light URL
-        url_to_call = self.lights_url+'/'+str(light_id)+'/state'
+        url_to_call = self.lights_url + '/' + str(light_id) + '/state'
         # set the given hue value
         body = '{{ "on" : true, "hue" : {} }}'.format(hue)
         # send the request
+        rest.send('PUT', url_to_call, body, {'Content-Type': 'application/json'})
+
+    def set_bri(self, light_id, bri):
+
+        url_to_call = self.lights_url + '/' + str(light_id) + '/state'
+        body = '{{ "on" : true, "bri" : {} }}'.format(bri)
         rest.send('PUT', url_to_call, body, {'Content-Type': 'application/json'})
