@@ -14,6 +14,7 @@ def getlumVal(url):
 
     # without auth, omit the last parameter
     # print the lumicity
+    refresh = rest.send(url=base_url + '/ZWaveAPI/Data/0', auth=(username, password))
     lumVal = all_devices['devices']['3']['instances']['0']['commandClasses']['49']['data']['3']['val']['value']
 
     return lumVal

@@ -91,5 +91,16 @@ class HueBridge:
     def set_bri(self, light_id, bri):
 
         url_to_call = self.lights_url + '/' + str(light_id) + '/state'
-        body = '{{ "on" : true, "bri" : {} }}'.format(bri)
+        body = '{{ "on" : true, "bri" : {}, "sat" : 0, "hue" : 0 }}'.format(bri)
+        rest.send('PUT', url_to_call, body, {'Content-Type': 'application/json'})
+
+    def get_bri(self, light_id):
+
+        url_to_call = self.lights_url + '/' + str(light_id) + '/state'
+        return int(rest.send(url=url_to_call)['bri'])
+
+    def set_sat(self, light_id, sat):
+
+        url_to_call = self.lights_url + '/' + str(light_id) + '/state'
+        body = '{{ "on" : true, "sat" : {} }}'.format(sat)
         rest.send('PUT', url_to_call, body, {'Content-Type': 'application/json'})

@@ -1,11 +1,10 @@
 from telegram.ext import Updater, CommandHandler
 from gtts import gTTS
 from os import remove
-from sys import argv
 
 import time
 import zwave
-from setVal import set_val
+from setVal import set_val, get_val
 
 updater = Updater(token='407521774:AAEkpDDxsPvJCMteOiQxWE91Z6JiJfH2xXs')
 dispatcher = updater.dispatcher
@@ -60,25 +59,27 @@ def check_lum(bot, update, check_count):
 
 
 def get_lum():
-    return zwave.getlumVal(str(argv[1]))
+    return zwave.getlumVal("192.168.0.107")
 
 
 def turn_up():
     # Keep turning up until it's proper.
+    # bri_to_set = get_val()
     bri_to_set = 0
-    while get_lum() < proper_min & bri_to_set <= 100:
+    while get_lum() < proper_min :
         # function for Hue comes here.
-        bri_to_set += 20
+        bri_to_set += 50
         set_val(bri_to_set)
         time.sleep(3)
 
 
 def turn_down():
     # Keep turning down until it's proper.
-    bri_to_set = 100
-    while get_lum() > proper_max & bri_to_set >= 0:
+    # bri_to_set = get_val()
+    bri_to_set = 254
+    while get_lum() > proper_max :
         # function for Hue comes here.
-        bri_to_set -= 20
+        bri_to_set -= 50
         set_val(bri_to_set)
         time.sleep(3)
 
@@ -88,7 +89,7 @@ def auto(bot, update):
     while 1 > 0:
         check_lum(bot, update, check_count)
         check_count = check_count + 1
-        time.sleep(10)
+        time.sleep(5)
 
 
 def user_initiate(bot, update):
