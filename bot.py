@@ -1,15 +1,15 @@
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters
 from gtts import gTTS
 from os import remove
 
 import time
 import zwave
-from setVal import set_val, get_val
+from hue_lib import set_val, get_val
+import range
 
 updater = Updater(token='407521774:AAEkpDDxsPvJCMteOiQxWE91Z6JiJfH2xXs')
 dispatcher = updater.dispatcher
-proper_min = 150
-proper_max = 210
+proper_range = range.ProperRange()
 
 
 def voice_generate(bot, update, sentence):
@@ -20,91 +20,198 @@ def voice_generate(bot, update, sentence):
 
 
 def startup(bot, update):
-    voice_generate(bot, update, "Welcome to the project GT.")
-    voice_generate(bot, update, "Now I will initiate an automatic check on Brightness: ")
     bot.sendMessage(chat_id=update.message.chat_id,
-                    text="Welcome to the project GT.")
+                    text="Welcome to the project GT.For instructions, type  /inst")
     bot.sendMessage(chat_id=update.message.chat_id,
-                    text="Now I will initiate an automatic check on Brightness: ")
-    auto(bot, update)
+                    text="For instructions, type    /inst")
+    voice_generate(bot, update, "Welcome to the project GT. For instructions, type slash inst")
 
 
 def check_lum(bot, update, check_count):
     current_lun = get_lum()
     if current_lun < 0:
         bot.sendMessage(chat_id=update.message.chat_id,
-                        text="Check #" + str(check_count) + "Failed reading luminiscence.")
-        voice_generate(bot, update, "Check #" + str(check_count) + "Failed reading luminiscence.")
-    elif current_lun > proper_max:
+                        text="Check #" + str(check_count) + "Failed reading Brightness.")
+        voice_generate(bot, update, "Check #" + str(check_count) + "Failed reading Brightness.")
+    elif current_lun > proper_range.proper_max:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + " [ " + str(
-                            current_lun) + " ] " + ": Luminiscence too high, turning down.")
+                            current_lun) + " ] " + ": Brightness too high, turning down.")
         voice_generate(bot, update, "Check #" + str(check_count) + " [ " + str(
-            current_lun) + " ] " + ": Luminiscence too high, turning down.")
+            current_lun) + " ] " + ": Brightness too high, turning down.")
         turn_down()
-    elif current_lun < proper_min:
+    elif current_lun < proper_range.proper_min:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + " [ " + str(
-                            current_lun) + " ] " + ": Luminiscence too low, turning up.")
+                            current_lun) + " ] " + ": Brightness too low, turning up.")
         voice_generate(bot, update, "Check #" + str(check_count) + " [ " + str(
-            current_lun) + " ] " + ": Luminiscence too low, turning up.")
+            current_lun) + " ] " + ": Brightness too low, turning up.")
         turn_up()
     else:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="Check #" + str(check_count) + " [ " + str(
-                            current_lun) + " ] " + ": Luminiscence in proper range.")
+                            current_lun) + " ] " + ": Brightness in proper range.")
         voice_generate(bot, update, "Check #" + str(check_count) + " [ " + str(
-            current_lun) + " ] " + ": Luminiscence in proper range.")
+            current_lun) + " ] " + ": Brightness in proper range.")
 
 
 def get_lum():
-    return zwave.getlumVal("192.168.0.107")
+    return zwave.get_lumval("192.168.0.107")
+
+
+def force_high():
+    set_val(254)
+
+
+def force_low():
+    set_val(0)
 
 
 def turn_up():
     # Keep turning up until it's proper.
-    # bri_to_set = get_val()
-    bri_to_set = 0
-    while get_lum() < proper_min :
-        # function for Hue comes here.
+    bri_to_set = get_val()
+    current_bri = get_lum()
+    while current_bri < proper_range.proper_min & current_bri > proper_range.proper_max & bri_to_set <= 254:
         bri_to_set += 50
         set_val(bri_to_set)
 
 
 def turn_down():
     # Keep turning down until it's proper.
-    # bri_to_set = get_val()
-    bri_to_set = 254
-    while get_lum() > proper_max :
-        # function for Hue comes here.
+    bri_to_set = get_val()
+    current_bri = get_lum()
+    while current_bri < proper_range.proper_min & current_bri > proper_range.proper_max & bri_to_set >= 0:
         bri_to_set -= 50
         set_val(bri_to_set)
 
 
 def auto(bot, update):
+    voice_generate(bot, update, "Now I will initiate an automatic check on Brightness: ")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Now I will initiate an automatic check on Brightness: ")
     check_count = 0
     while 1 > 0:
         check_lum(bot, update, check_count)
         check_count = check_count + 1
-        time.sleep(300)
+        time.sleep(20)
 
 
-def user_initiate(bot, update):
-    check_lum(bot, update, 0)
+def instructions(bot, update):
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/auto    :   Start a series of automatic brightness check.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/demand    :   Start brightness check on demand.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/high    :   Set Philips Hue to highest brightness.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/low    :   Set Philips Hue to the lowest brightness.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/up    :   Set brightness a little higher")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/down    :   Set brightness a little lower")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/max    :   Set current brightness value to max proper value")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/min    :   Set current brightness value to min proper value")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Moreover, you can directly enter a number (0~254) to set Philips Hue")
+
+
+def up(bot, update):
+    current_bri = get_lum()
+    set_val(current_bri + 20)
+    if current_bri > proper_range.proper_max:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="This room seems to be too bright, take care.")
+        voice_generate(bot, update, "This room seems to be too bright, take care.")
+
+
+def down(bot, update):
+    current_bri = get_lum()
+    set_val(current_bri + 20)
+    if current_bri < proper_range.proper_min:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="This room seems to be too dark, take care.")
+        voice_generate(bot, update, "This room seems to be too bright, take care.")
+
+
+def set_by_value(bot, update, val):
+    if type(val) is int:
+        set_val(val)
+        check_on_demand(bot, update)
+    else:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="You can enter a specific number to set the Hue.")
+        voice_generate(bot, update, "You can enter a specific number to set the Hue.")
+
+
+def check_on_demand(bot, update):
+    current_lun = get_lum()
+    if current_lun < 0:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Check #" + "Failed reading Brightness.")
+        voice_generate(bot, update, "Check #" + "Failed reading Brightness.")
+    elif current_lun > proper_range.proper_max:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Check #" + " [ " + str(current_lun)
+                             + " ] " + ": Brightness too high, turning down.")
+        voice_generate(bot, update, "Check #" + " [ " + str(current_lun)
+                       + " ] " + ": Brightness too high, turning down.")
+    elif current_lun < proper_range.proper_min:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Check #" + " [ " + str(current_lun)
+                             + " ] " + ": Brightness too low, turning up.")
+        voice_generate(bot, update, "Check #" + " [ " + str(current_lun)
+                       + " ] " + ": Brightness too low, turning up.")
+    else:
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Check #" + " [ " + str(current_lun)
+                             + " ] " + ": Brightness in proper range.")
+        voice_generate(bot, update, "Check #" + " [ " + str(current_lun)
+                       + " ] " + ": Brightness in proper range.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="You can now adjust brightness by typing /up or /down")
+    voice_generate(bot, update, "You can now adjust brightness by typing /up or /down")
+
+
+def adjust_max(bot, update):
+    voice_generate(bot, update, "Here you can adjust the maximum value for proper brightness")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Here you can adjust the maximum value for proper brightness")
+    proper_range.set_max(get_lum())
+
+
+def adjust_min(bot, update):
+    voice_generate(bot, update, "Here you can adjust the minimum value for proper brightness")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Here you can adjust the minimum value for proper brightness")
+    proper_range.set_min(get_lum())
 
 
 def main():
-    # Call function "startup" on the start up.
     start_handler = CommandHandler('start', startup)
     auto_handler = CommandHandler('auto', auto)
-    user_initiate_handler = CommandHandler('check', user_initiate)
+    force_high_handler = CommandHandler('high', force_high)
+    force_low_handler = CommandHandler('low', force_low)
+    instructions_handler = CommandHandler('inst', instructions)
+    check_on_demand_handler = CommandHandler('demand', check_on_demand)
+    up_handler = CommandHandler('up', up)
+    down_handler = CommandHandler('down', down)
+    adjust_max_handler = CommandHandler('max', adjust_max)
+    adjust_min_handler = CommandHandler('min', adjust_min)
+    message_handler = MessageHandler(filters.Filters.text, set_by_value)
     dispatcher.add_handler(start_handler)
-    dispatcher.add_handler(user_initiate_handler)
     dispatcher.add_handler(auto_handler)
+    dispatcher.add_handler(force_high_handler)
+    dispatcher.add_handler(force_low_handler)
+    dispatcher.add_handler(instructions_handler)
+    dispatcher.add_handler(check_on_demand_handler)
+    dispatcher.add_handler(up_handler)
+    dispatcher.add_handler(down_handler)
+    dispatcher.add_handler(message_handler)
+    dispatcher.add_handler(adjust_max_handler)
+    dispatcher.add_handler(adjust_min_handler)
     updater.start_polling()
-
-    #  Run the bot until you press Ctrl-C or the process receives SIGINT,
-    #  SIGTERM or SIGABRT.
     updater.idle()
 
 

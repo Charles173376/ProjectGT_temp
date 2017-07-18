@@ -1,7 +1,7 @@
 import rest
 
 
-def getlumVal(url):
+def get_lumval(url):
     base_url = "http://" + url + ":8083"
     # login credentials, to be replaced with the right ones
     # N.B. authentication can be disabled from the configuration of the 'Z-Wave Network Access' app
@@ -14,7 +14,6 @@ def getlumVal(url):
 
     # without auth, omit the last parameter
     # print the lumicity
-    refresh = rest.send(url=base_url + '/ZWaveAPI/Data/0', auth=(username, password))
-    lumVal = all_devices['devices']['3']['instances']['0']['commandClasses']['49']['data']['3']['val']['value']
+    lum_val = all_devices['devices']['3']['instances']['0']['commandClasses']['49']['data']['3']['val']['value']
 
-    return lumVal
+    return lum_val
