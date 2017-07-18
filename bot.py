@@ -27,7 +27,6 @@ def startup(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id,
                     text="Now I will initiate an automatic check on Brightness: ")
     auto(bot, update)
-    return 0
 
 
 def check_lum(bot, update, check_count):
@@ -70,7 +69,6 @@ def turn_up():
         # function for Hue comes here.
         bri_to_set += 50
         set_val(bri_to_set)
-        time.sleep(3)
 
 
 def turn_down():
@@ -81,7 +79,6 @@ def turn_down():
         # function for Hue comes here.
         bri_to_set -= 50
         set_val(bri_to_set)
-        time.sleep(3)
 
 
 def auto(bot, update):
@@ -89,7 +86,7 @@ def auto(bot, update):
     while 1 > 0:
         check_lum(bot, update, check_count)
         check_count = check_count + 1
-        time.sleep(5)
+        time.sleep(300)
 
 
 def user_initiate(bot, update):
