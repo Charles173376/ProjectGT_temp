@@ -70,12 +70,18 @@ def get_lum():
     return zwave.get_lumval("192.168.0.107")
 
 
-def force_high():
+def force_high(bot, update):
     set_val(254)
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Forcing maximum possible brightness, take care.")
+    voice_generate(bot, update, "Forcing maximum possible brightness, take care.")
 
 
-def force_low():
+def force_low(bot, update):
     set_val(0)
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Forcing minimum possible brightness, take care.")
+    voice_generate(bot, update, "Forcing minimum possible brightness, take care.")
 
 
 def turn_up():
@@ -141,7 +147,7 @@ def up(bot, update):
 
 def down(bot, update):
     current_bri = get_val()
-    set_val(current_bri + 20)
+    set_val(current_bri - 20)
     if current_bri < proper_range.proper_min:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="This room seems to be too dark, take care.")
