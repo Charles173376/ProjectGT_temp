@@ -118,7 +118,7 @@ def instructions(bot, update):
 
 
 def up(bot, update):
-    current_bri = get_lum()
+    current_bri = get_val()
     set_val(current_bri + 20)
     if current_bri > proper_range.proper_max:
         bot.sendMessage(chat_id=update.message.chat_id,
@@ -127,7 +127,7 @@ def up(bot, update):
 
 
 def down(bot, update):
-    current_bri = get_lum()
+    current_bri = get_val()
     set_val(current_bri + 20)
     if current_bri < proper_range.proper_min:
         bot.sendMessage(chat_id=update.message.chat_id,
