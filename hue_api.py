@@ -96,8 +96,9 @@ class HueBridge:
 
     def get_bri(self, light_id):
 
-        url_to_call = self.lights_url + '/' + str(light_id) + '/state'
-        return int(rest.send(url=url_to_call)['bri'])
+        url_to_call = self.lights_url + '/' + str(light_id)
+        dic = rest.send(url=url_to_call)
+        return dict['state']['bri']
 
     def set_sat(self, light_id, sat):
 
