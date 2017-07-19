@@ -27,6 +27,17 @@ def startup(bot, update):
     voice_generate(bot, update, "Welcome to the project GT. For instructions, type slash inst")
 
 
+def show(bot, update):
+    cur_lum = get_lum()
+    cur_bri = get_val()
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Current Luminiscence value is " + str(cur_lum))
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Current brightness value of Hue is " + str(cur_bri))
+    voice_generate(bot, update, "Current Luminiscence value is " + str(cur_lum) +
+                   "Current brightness value of Hue is " + str(cur_bri))
+
+
 def check_lum(bot, update, check_count):
     current_lun = get_lum()
     if current_lun < 0:
@@ -90,7 +101,7 @@ def auto(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id,
                     text="Now I will initiate an automatic check on Brightness: ")
     check_count = 0
-    while 1 > 0:
+    while check_count <= 30:
         check_lum(bot, update, check_count)
         check_count = check_count + 1
         time.sleep(20)
@@ -99,6 +110,8 @@ def auto(bot, update):
 def instructions(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id,
                     text="/auto    :   Start a series of automatic brightness check.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="/show    :   Show current Luminiscence value and current brightness value.")
     bot.sendMessage(chat_id=update.message.chat_id,
                     text="/demand    :   Start brightness check on demand.")
     bot.sendMessage(chat_id=update.message.chat_id,
@@ -135,14 +148,21 @@ def down(bot, update):
         voice_generate(bot, update, "This room seems to be too bright, take care.")
 
 
-def set_by_value(bot, update, val):
-    if type(val) is int:
-        set_val(val)
+def set_by_value(bot, update):
+    req = int(update.message.text)
+    if req > 254 | req < 0:
+        set_val(update.message.text)
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="Requested value set.")
+        voice_generate(bot, update, "Requested value set.")
         check_on_demand(bot, update)
     else:
         bot.sendMessage(chat_id=update.message.chat_id,
                         text="You can enter a specific number to set the Hue.")
-        voice_generate(bot, update, "You can enter a specific number to set the Hue.")
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text="But it should be with [0,254]")
+        voice_generate(bot, update, "You can enter a specific number to set the Hue." +
+                       "But it should be with zero to 254")
 
 
 def check_on_demand(bot, update):
@@ -188,8 +208,16 @@ def adjust_min(bot, update):
     proper_range.set_min(get_lum())
 
 
+def stop(bot, update):
+    voice_generate(bot, update, "Bot is stopping.")
+    bot.sendMessage(chat_id=update.message.chat_id,
+                    text="Bot is stopping.")
+    updater.stop()
+
+
 def main():
     start_handler = CommandHandler('start', startup)
+    show_handler = CommandHandler('show', show)
     auto_handler = CommandHandler('auto', auto)
     force_high_handler = CommandHandler('high', force_high)
     force_low_handler = CommandHandler('low', force_low)
@@ -199,8 +227,10 @@ def main():
     down_handler = CommandHandler('down', down)
     adjust_max_handler = CommandHandler('max', adjust_max)
     adjust_min_handler = CommandHandler('min', adjust_min)
+    stop_handler = CommandHandler('stop', stop)
     message_handler = MessageHandler(filters.Filters.text, set_by_value)
     dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(show_handler)
     dispatcher.add_handler(auto_handler)
     dispatcher.add_handler(force_high_handler)
     dispatcher.add_handler(force_low_handler)
@@ -211,6 +241,7 @@ def main():
     dispatcher.add_handler(message_handler)
     dispatcher.add_handler(adjust_max_handler)
     dispatcher.add_handler(adjust_min_handler)
+    dispatcher.add_handler(stop_handler)
     updater.start_polling()
     updater.idle()
 
